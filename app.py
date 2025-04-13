@@ -1,4 +1,5 @@
 import streamlit as st
+import numpy as np
 
 # ページ設定
 st.set_page_config(page_title="AHP_demo", layout = "wide")
@@ -29,10 +30,21 @@ def show_start():
 
 # 評価基準の一対比較画面
 def show_criteria():
-    st.title("あなたは晩ご飯に何を求めますか？")
-    # TODO 評価基準の一対比較入力UI実装
+    with center:
+        st.title("あなたは晩ご飯に何を求めますか？")
+        st.write("どちらがより大事ですか？")
+        st.write("安上がり vs おいしさ")
+        # 一対比較スライダー
+        criteria_choise2_score = st.slider("おいしさの優先度", 1/9, 9.0, 1.0, step=0.1)
+        # 一対比較行列を保存
+        st.session_state.criteria_matrix = np.array([
+            [1, 1/criteria_choise2_score],
+            [criteria_choise2_score, 1]
+            ])
+        # 一対比較行列を表示（確認用）
+        st.write("評価基準の一対比較行列: ")
+        st.dataframe(st.session_state.criteria_matrix)
     if st.button("次へ"):
-        # TODO入力された比較を保存する処理
         go_to("alternatives")
 
 # 代替案の一対比較画面
