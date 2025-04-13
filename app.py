@@ -14,7 +14,11 @@ if "page" not in st.session_state:
 if "criteria_matrix" not in st.session_state:
     st.session_state.criteria_matrix = None
 if "weights" not in st.session_state:
-    st.session_state.weights = None
+    st.session_state.weights = [np.zeros((3, 3)) for _ in range(2)]
+if "comparison_step" not in st.session_state:
+    st.session_state.comparison_step = 0
+if "criteria_index" not in st.session_state:
+    st.session_state.criteria_index = 0
 
 # ページ遷移処理
 def go_to(page_num):
@@ -34,26 +38,91 @@ def show_criteria():
         st.title("あなたは晩ご飯に何を求めますか？")
         st.write("どちらがより大事ですか？")
         st.write("安上がり vs おいしさ")
+        
+    # 左右ラベル付きスライダー（HTMLで実現）
+    st.markdown("""
+    <div style="display: flex; justify-content: space-between; padding: 0 1.5em;">
+        <span>安上がり</span>
+        <span>おいしさ</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    with center:
+        # スライダーでは「比」を「差」として示すため、対数を使う
+        min_log_value = np.log(1/9)
+        max_log_value = np.log(9)
         # 一対比較スライダー
-        criteria_choise2_score = st.slider("おいしさの優先度", 1/9, 9.0, 1.0, step=0.1)
-        # 一対比較行列を保存
-        st.session_state.criteria_matrix = np.array([
-            [1, 1/criteria_choise2_score],
-            [criteria_choise2_score, 1]
-            ])
-        # 一対比較行列を表示（確認用）
-        st.write("評価基準の一対比較行列: ")
+        log_criteria_choise2_score = st.slider(
+            label = "",
+            min_value= min_log_value, 
+            max_value = max_log_value, 
+            value = 0.0, 
+            step=0.1,
+            key = f"slider_criteria")
+        
+    # 指数変換して「差」を「比」に戻す
+    criteria_choise2_score = np.exp(log_criteria_choise2_score)
+    # 一対比較行列を保存
+    st.session_state.criteria_matrix = np.array([
+        [1, 1/criteria_choise2_score],
+        [criteria_choise2_score, 1]
+        ])
+
+    # デバッグ用
+    with center:
         st.dataframe(st.session_state.criteria_matrix)
+
     if st.button("次へ"):
         go_to("alternatives")
+
 
 # 代替案の一対比較画面
 def show_alternatives():
     st.title("晩ご飯を評価してください")
-    # TODO 代替案の一対比較入力UI実装
+    # 代替案
+    alternatives = ["カレー", "野菜炒め", "すき焼き"]
+    criteria = ["安上がり", "おいしさ"]
+    # 代替案の一対比較ペアの番号(行列に格納するときに使う)
+    pairs = [(0, 1), (0, 2), (1, 2)]
+
+
+    # 現在のステップと基準インデックス
+    step = st.session_state.comparison_step
+    crit_idx = st.session_state.criteria_index
+
+    # 比較する代替案のインデックス
+    i, j = pairs[step]
+    a1, a2 = alternatives[i], alternatives[j]
+
+    st.write(f"「{criteria[crit_idx]}かどうか」という評価基準において、どちらが重要ですか？")
+    st.write(f"{a1} vs {a2}")
+    
+    # スライダーで入力(対数スケールで)
+    log_score = st.slider(
+        label= "", 
+        min_value= np.log(1/9), 
+        max_value=np.log(9), 
+        value=0.0, 
+        step = 0.1,
+        key = f"slider_{crit_idx}_{step}")
+    # 指数変換で「差」を「比」に変換
+    ratio = np.exp(log_score)
+
+    st.session_state.weights[crit_idx][i, j] = ratio
+    st.session_state.weights[crit_idx][j, i] = 1 / ratio
+
     if st.button("次へ"):
-        # TODO入力された比較を保存して重み付け計算
-        go_to("result")
+        st.session_state.comparison_step += 1
+        if st.session_state.comparison_step >= len(pairs):
+            st.session_state.comparison_step = 0
+            st.session_state.criteria_index += 1
+
+            if st.session_state.criteria_index >= len(criteria):
+                go_to("result")
+            else:
+                st.rerun()
+        else:
+            st.rerun()
 
 
 # 結果の表示画面
