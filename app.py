@@ -1,5 +1,6 @@
 import streamlit as st
 import numpy as np
+import pandas as pd
 
 # ページ設定
 st.set_page_config(page_title="AHP_demo", layout = "wide")
@@ -24,6 +25,13 @@ if "criteria_index" not in st.session_state:
 def go_to(page_num):
     st.session_state.page = page_num
     st.rerun() # 強制的にスクリプト再実行（これをやらないと、その実行回でのpage_numのまま最後までスクリプトが実行されてしまう）
+
+# 行列からウェイトを求める関数
+def geometric_mean_weights(matrix):
+    product = np.prod(matrix, axis = 1) # 行方向に各要素を乗じた値を求める
+    geo_mean = product ** (1 / matrix.shape[0]) # 幾何平均を求める
+    return geo_mean / np.sum(geo_mean) # ウェイトを求める
+
 
 # スタート画面
 def show_start():
@@ -128,8 +136,27 @@ def show_alternatives():
 # 結果の表示画面
 def show_result():
     st.title("これがあなたの今日の晩ご飯です")
+
+    # 一対比較表の対角要素を1にする
+    for mat in st.session_state.weights:
+        np.fill_diagonal(mat, 1)
+
+    # 評価基準のウェイトを求める
+    criteria_weights = geometric_mean_weights(st.session_state.criteria_matrix)
+
+    # 代替案のウェイトを求める
+    alt_weights = [geometric_mean_weights(mat) for mat in st.session_state.weights]
+
+    # 総合評価を求める
+    final_weights = np.array(alt_weights).T @ criteria_weights
+
     st.markdown("棒グラフが高いほど評価が高いことを意味します")
-    # ウェイトを棒グラフで表示
+    # デバッグ用
+    alternatives = ["カレー", "野菜炒め", "すき焼き"]
+    df = pd.DataFrame([final_weights], columns=alternatives, index=["総合評価"])
+    with center:
+        st.dataframe(df)   
+    # TODO ウェイトを棒グラフで表示
     if st.button("はじめに戻る"):
         st.session_state.clear()
         go_to("start")
