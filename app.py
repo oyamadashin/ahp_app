@@ -53,11 +53,11 @@ def show_start():
 # 評価基準の一対比較画面
 def show_criteria():
     with center:
-        st.title("晩ご飯に何を求めますか？")
+        st.title("Q-0")
         st.markdown(
             """
             <div style="text-align: center;">
-                どちらがより重要ですか？<br>
+                今日の晩ご飯は次のどちらを重視しますか？<br>
                 <b>おいしさ</b> vs <b>安上がり</b>
             </div>
             """,
@@ -98,7 +98,9 @@ def show_criteria():
 # 代替案の一対比較画面
 def show_alternatives():
     with center:
-        st.title("晩ご飯を評価してください")
+        st.markdown(
+            f"# Q-{st.session_state.criteria_index+1}-{st.session_state.comparison_step+1}"
+        )
     # 代替案
     alternatives = ["カレー", "野菜炒め", "すき焼き"]
     criteria = ["安上がり", "おいしさ"]
