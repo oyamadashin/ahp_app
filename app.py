@@ -188,9 +188,13 @@ def show_result():
     with center:
         import matplotlib.pyplot as plt
         import matplotlib as mpl
+        from matplotlib import font_manager
 
-        # 日本語フォントを指定（環境に応じて変更してください）
-        mpl.rcParams["font.family"] = "MS Gothic"  # 例：Windowsの場合
+        # フォントファイルのパスを指定(renderはLinuxベースなので、msゴシック等を指定すると文字化けしてしまう)
+        font_path = "fonts/ipaexg.ttf"
+        font_prop = font_manager.FontProperties(fname=font_path)
+        plt.rcParams["font.family"] = font_prop.get_name()
+
         alternatives = ["カレー", "野菜炒め", "すき焼き"]
         fig, ax = plt.subplots(figsize=(1.0, 1.0))
         wedges, texts, autotexts = ax.pie(
@@ -198,6 +202,7 @@ def show_result():
             labels=alternatives,  # 凡例に使うラベル
             autopct="%1.1f%%",  # パーセンテージ表示
             startangle=90,  # 見栄えのためにスタート角度を調整
+            textprops={"fontproperties": font_prop},
         )
         # 割合（内側の文字）のフォントサイズ変更（必要なら）
         for autotext in autotexts:
