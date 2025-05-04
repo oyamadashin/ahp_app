@@ -39,7 +39,13 @@ def geometric_mean_weights(matrix):
 def show_start():
     with center:
         st.title("AHPで今日の晩ご飯を決めよう")
-        st.markdown("AHPは、あなたが本当に求めているものを知るために役立つツールです")
+        st.markdown(
+            """
+            - 人はたくさんのものを同時に比べるのは苦手ですが、2つのものを比べるのは得意です。このような**一対比較**を活かして最適な選択肢を決める手法が**AHP**です。
+            - このAHP体験デモでは、**スライダー**を動かして、一対比較を何回かくりかえすことで、あなたにとって最適な今日の晩ご飯を決めることができます。
+            """
+        )
+        st.image("static/images/slider.jpg")
         if st.button("はじめる"):
             go_to("criteria")
 
@@ -47,11 +53,11 @@ def show_start():
 # 評価基準の一対比較画面
 def show_criteria():
     with center:
-        st.title("あなたは晩ご飯に何を求めますか？")
-        st.write("どちらがより大事ですか？")
+        st.title("晩ご飯に何を求めますか？")
         st.markdown(
             """
             <div style="text-align: center;">
+                どちらがより重要ですか？<br>
                 <b>おいしさ</b> vs <b>安上がり</b>
             </div>
             """,
@@ -59,14 +65,11 @@ def show_criteria():
         )
 
     with center:
-        # スライダーでは「比」を「差」として示すため、対数を使う
-        min_log_value = np.log(1 / 9)
-        max_log_value = np.log(9)
         # 一対比較スライダー
-        log_criteria_choise2_score = st.slider(
+        log_criteria_score = st.slider(
             label="",
-            min_value=min_log_value,
-            max_value=max_log_value,
+            min_value=-1.0,  # 表示する値は-1, 1
+            max_value=1.0,
             value=0.0,
             step=0.1,
             key=f"slider_criteria",
@@ -80,11 +83,11 @@ def show_criteria():
             unsafe_allow_html=True,
         )
 
-    # 指数変換して「差」を「比」に戻す
-    criteria_choise2_score = np.exp(log_criteria_choise2_score)
+    # -1～1のスケールにしていたlog(1/9)～log(9)にした上で、指数変換して「差」を「比」に戻す
+    criteria_score = np.exp(log_criteria_score * np.log(9))
     # 一対比較行列を保存
     st.session_state.criteria_matrix = np.array(
-        [[1, criteria_choise2_score], [1 / criteria_choise2_score, 1]]
+        [[1, criteria_score], [1 / criteria_score, 1]]
     )
 
     with center:
@@ -111,8 +114,10 @@ def show_alternatives():
     a1, a2 = alternatives[i], alternatives[j]
 
     with center:
-        st.write(
-            f"「{criteria[crit_idx]}かどうか」という評価基準において、どちらが重要ですか？"
+        st.markdown(
+            f"""
+            **「{criteria[crit_idx]}」** という評価基準において、どちらを高く評価しますか？
+            """
         )
 
         st.markdown(
@@ -127,8 +132,8 @@ def show_alternatives():
         # スライダーで入力(対数スケールで)
         log_score = st.slider(
             label="",
-            min_value=np.log(1 / 9),
-            max_value=np.log(9),
+            min_value=-1.0,  # ユーザーに表示する値は-1, 1
+            max_value=1.0,
             value=0.0,
             step=0.1,
             key=f"slider_{crit_idx}_{step}",
@@ -136,13 +141,13 @@ def show_alternatives():
         st.markdown(
             """
             <div style ="text-align: center;">
-                ← こちらの方が重要　　　　　同程度　　　　　こちらの方が重要 →
+                ← こちらの方を高く評価する　　　　　同程度　　　　　こちらの方を高く評価する →
             </div>
             """,
             unsafe_allow_html=True,
         )
-    # 指数変換で「差」を「比」に変換
-    ratio = np.exp(log_score)
+    # -1～1にしていたスケールをlog(1/9)～log(9)にした上で、指数変換で「差」を「比」に変換
+    ratio = np.exp(log_score * np.log(9))
 
     st.session_state.weights[crit_idx][i, j] = ratio
     st.session_state.weights[crit_idx][j, i] = 1 / ratio
@@ -165,7 +170,7 @@ def show_alternatives():
 # 結果の表示画面
 def show_result():
     with center:
-        st.title("これがあなたの今日の晩ご飯です")
+        st.title("これが今日の晩ご飯です")
 
     # 一対比較表の対角要素を1にする
     for mat in st.session_state.weights:
@@ -181,13 +186,27 @@ def show_result():
     final_weights = np.array(alt_weights).T @ criteria_weights
 
     with center:
-        st.markdown("棒グラフが高いほど評価が高いことを意味します")
-    # デバッグ用
-    alternatives = ["カレー", "野菜炒め", "すき焼き"]
-    df = pd.DataFrame([final_weights], columns=alternatives, index=["総合評価"])
-    with center:
-        st.dataframe(df)
-        # TODO ウェイトを棒グラフで表示
+        import matplotlib.pyplot as plt
+        import matplotlib as mpl
+
+        # 日本語フォントを指定（環境に応じて変更してください）
+        mpl.rcParams["font.family"] = "MS Gothic"  # 例：Windowsの場合
+        alternatives = ["カレー", "野菜炒め", "すき焼き"]
+        fig, ax = plt.subplots(figsize=(1.0, 1.0))
+        wedges, texts, autotexts = ax.pie(
+            final_weights,
+            labels=alternatives,  # 凡例に使うラベル
+            autopct="%1.1f%%",  # パーセンテージ表示
+            startangle=90,  # 見栄えのためにスタート角度を調整
+        )
+        # 割合（内側の文字）のフォントサイズ変更（必要なら）
+        for autotext in autotexts:
+            autotext.set_fontsize(6)
+        ax.axis("equal")  # 円形にするための設定
+        st.pyplot(fig)
+        st.write(
+            "割合が大きいほど、あなたにとって望ましい晩ご飯であることを意味します。"
+        )
         if st.button("はじめに戻る"):
             st.session_state.clear()
             go_to("start")
