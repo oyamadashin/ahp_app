@@ -45,7 +45,7 @@ def show_start():
             - このAHP体験デモでは、**スライダー**を動かして、一対比較を何回かくりかえすことで、あなたにとって最適な今日の晩ご飯を決めることができます。
             """
         )
-        st.image("static/images/slider.jpg")
+        st.image("static/images/slider.jpg")  # スライダー操作を解説する画像
         if st.button("はじめる"):
             go_to("criteria")
 
