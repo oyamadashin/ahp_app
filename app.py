@@ -74,14 +74,15 @@ def show_criteria():
             step=0.1,
             key=f"slider_criteria",
         )
-        st.markdown(
-            """
-            <div style ="text-align: center;">
-                ← こちらの方が重要　　　　　同程度　　　　　こちらの方が重要 →
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.image("static/images/axis_label.jpg", use_column_width=True)
+        # st.markdown(
+        #     """
+        #     <div style ="text-align: center;">
+        #         ← こちらの方が重要　　　　　同程度　　　　　こちらの方が重要 →
+        #     </div>
+        #     """,
+        #     unsafe_allow_html=True,
+        # )
 
     # -1～1のスケールにしていたlog(1/9)～log(9)にした上で、指数変換して「差」を「比」に戻す
     criteria_score = np.exp(log_criteria_score * np.log(9))
@@ -140,14 +141,15 @@ def show_alternatives():
             step=0.1,
             key=f"slider_{crit_idx}_{step}",
         )
-        st.markdown(
-            """
-            <div style ="text-align: center;">
-                ← こちらの方を高く評価する　　　　　同程度　　　　　こちらの方を高く評価する →
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.image("static/images/axis_label.jpg", use_column_width=True)
+        # st.markdown(
+        #     """
+        #     <div style ="text-align: center;">
+        #         ← こちらの方を高く評価する　　　　　同程度　　　　　こちらの方を高く評価する →
+        #     </div>
+        #     """,
+        #     unsafe_allow_html=True,
+        # )
     # -1～1にしていたスケールをlog(1/9)～log(9)にした上で、指数変換で「差」を「比」に変換
     ratio = np.exp(log_score * np.log(9))
 
