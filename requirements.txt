@@ -4,3 +4,6 @@
 
 # 使用パッケージ
 streamlit==1.31.1
+numpy
+pandas
+matplotlib
