@@ -54,7 +54,7 @@ def show_start():
         st.markdown(
             """
             - 人はたくさんのものを同時に比べるのは苦手ですが、2つのものを比べるのは得意です。このような**一対比較**を活かして最適な選択肢を決める手法が**AHP**です。
-            - このAHP体験デモでは、**スライダー**を動かして、一対比較を何回かくりかえすことで、あなたにとって最適な今日の晩ご飯を決めることができます。
+            - このAHP体験デモでは、**スライダー**を動かして、一対比較を何回かくりかえすことで、あなたにとって最適な〇〇〇〇を決めることができます。
             """
         )
         st.image("static/images/slider.jpg")  # スライダー操作を解説する画像
@@ -67,29 +67,26 @@ def show_start():
                 go_to("input")
 
 
-# TODO 評価基準と選択肢を入力させる画面
+# 評価基準と選択肢を入力させる画面
 def show_input():
     with center:
-        st.session_state.theme = st.text_input(
-            "決めたいことを教えてください", value="今日の晩ご飯"
-        )
+        st.markdown("### 決めたいことや評価基準などを自由に変えられます")
+        st.session_state.theme = st.text_input("決めたいこと", value="今日の晩ご飯")
         st.session_state.criterion1 = st.text_input(
-            "評価基準1を入力してください",
+            "評価基準1",
             value="おいしさ",
         )
         st.session_state.criterion2 = st.text_input(
-            "評価基準2を入力してください",
+            "評価基準2",
             value="安上がり",
         )
-        st.session_state.alternative1 = st.text_input(
-            "選択肢1を入力してください", value="カレー"
-        )
+        st.session_state.alternative1 = st.text_input("選択肢1", value="カレー")
         st.session_state.alternative2 = st.text_input(
-            "選択肢2を入力してください",
+            "選択肢2",
             value="野菜炒め",
         )
         st.session_state.alternative3 = st.text_input(
-            "選択肢3を入力してください",
+            "選択肢3",
             value="すき焼き",
         )
 
