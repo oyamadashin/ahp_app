@@ -20,6 +20,18 @@ if "comparison_step" not in st.session_state:
     st.session_state.comparison_step = 0
 if "criteria_index" not in st.session_state:
     st.session_state.criteria_index = 0
+if "theme" not in st.session_state:
+    st.session_state.theme = "今日の晩ご飯"
+if "criterion1" not in st.session_state:
+    st.session_state.criterion1 = "おいしさ"
+if "criterion2" not in st.session_state:
+    st.session_state.criterion2 = "安上がり"
+if "alternative1" not in st.session_state:
+    st.session_state.alternative1 = "カレー"
+if "alternative2" not in st.session_state:
+    st.session_state.alternative2 = "野菜炒め"
+if "alternative3" not in st.session_state:
+    st.session_state.alternative3 = "すき焼き"
 
 
 # ページ遷移処理
@@ -38,7 +50,7 @@ def geometric_mean_weights(matrix):
 # スタート画面
 def show_start():
     with center:
-        st.title("AHPで今日の晩ご飯を決めよう")
+        st.title("AHPで〇〇〇〇を決めよう")
         st.markdown(
             """
             - 人はたくさんのものを同時に比べるのは苦手ですが、2つのものを比べるのは得意です。このような**一対比較**を活かして最適な選択肢を決める手法が**AHP**です。
@@ -46,7 +58,42 @@ def show_start():
             """
         )
         st.image("static/images/slider.jpg")  # スライダー操作を解説する画像
-        if st.button("はじめる"):
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("初めての人はこちら"):
+                go_to("criteria")
+        with col2:
+            if st.button("慣れた人はこちら"):
+                go_to("input")
+
+
+# TODO 評価基準と選択肢を入力させる画面
+def show_input():
+    with center:
+        st.session_state.theme = st.text_input(
+            "決めたいことを教えてください", value="今日の晩ご飯"
+        )
+        st.session_state.criterion1 = st.text_input(
+            "評価基準1を入力してください",
+            value="おいしさ",
+        )
+        st.session_state.criterion2 = st.text_input(
+            "評価基準2を入力してください",
+            value="安上がり",
+        )
+        st.session_state.alternative1 = st.text_input(
+            "選択肢1を入力してください", value="カレー"
+        )
+        st.session_state.alternative2 = st.text_input(
+            "選択肢2を入力してください",
+            value="野菜炒め",
+        )
+        st.session_state.alternative3 = st.text_input(
+            "選択肢3を入力してください",
+            value="すき焼き",
+        )
+
+        if st.button("次へ"):
             go_to("criteria")
 
 
@@ -55,10 +102,10 @@ def show_criteria():
     with center:
         st.title("Q-0")
         st.markdown(
-            """
+            f"""
             <div style="text-align: center;">
-                今日の晩ご飯は次のどちらを重視しますか？<br>
-                <b>おいしさ</b> vs <b>安上がり</b>
+                {st.session_state.theme}を決めるにあたり、次のどちらを重視しますか？<br>
+                <b>{st.session_state.criterion1}</b> vs <b>{st.session_state.criterion2}</b>
             </div>
             """,
             unsafe_allow_html=True,
@@ -103,8 +150,12 @@ def show_alternatives():
             f"# Q-{st.session_state.criteria_index+1}-{st.session_state.comparison_step+1}"
         )
     # 代替案
-    alternatives = ["カレー", "野菜炒め", "すき焼き"]
-    criteria = ["安上がり", "おいしさ"]
+    alternatives = [
+        st.session_state.alternative1,
+        st.session_state.alternative2,
+        st.session_state.alternative3,
+    ]
+    criteria = [st.session_state.criterion2, st.session_state.criterion1]
     # 代替案の一対比較ペアの番号(行列に格納するときに使う)
     pairs = [(0, 1), (0, 2), (1, 2)]
 
@@ -174,7 +225,11 @@ def show_alternatives():
 # 結果の表示画面
 def show_result():
     with center:
-        st.title("これが今日の晩ご飯です")
+        st.markdown(
+            f"""
+                # これがあなたの望む{st.session_state.theme}です
+            """
+        )
 
     # 一対比較表の対角要素を1にする
     for mat in st.session_state.weights:
@@ -199,7 +254,11 @@ def show_result():
         font_prop = font_manager.FontProperties(fname=font_path)
         plt.rcParams["font.family"] = font_prop.get_name()
 
-        alternatives = ["カレー", "野菜炒め", "すき焼き"]
+        alternatives = [
+            st.session_state.alternative1,
+            st.session_state.alternative2,
+            st.session_state.alternative3,
+        ]
         fig, ax = plt.subplots(figsize=(1.0, 1.0))
         wedges, texts, autotexts = ax.pie(
             final_weights,
@@ -213,9 +272,12 @@ def show_result():
             autotext.set_fontsize(6)
         ax.axis("equal")  # 円形にするための設定
         st.pyplot(fig)
-        st.write(
-            "割合が大きいほど、あなたにとって望ましい晩ご飯であることを意味します。"
+        st.markdown(
+            f"""
+            割合が大きいほど、あなたにとって望ましい{st.session_state.theme}であることを意味します。
+            """
         )
+
         if st.button("はじめに戻る"):
             st.session_state.clear()
             go_to("start")
@@ -224,6 +286,8 @@ def show_result():
 # ページの表示
 if st.session_state.page == "start":
     show_start()
+elif st.session_state.page == "input":
+    show_input()
 elif st.session_state.page == "criteria":
     show_criteria()
 elif st.session_state.page == "alternatives":
